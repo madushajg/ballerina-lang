@@ -72,8 +72,6 @@ public class PackageID {
             Lists.of(Names.LANG, Names.VALUE), Names.EMPTY);
     public static final PackageID XML = new PackageID(Names.BALLERINA_ORG,
             Lists.of(Names.LANG, Names.XML), Names.EMPTY);
-    public static final PackageID BOOLEAN = new PackageID(Names.BALLERINA_ORG,
-            Lists.of(Names.LANG, Names.BOOLEAN), Names.EMPTY);
 
     public final Name orgName;
     public Name name;

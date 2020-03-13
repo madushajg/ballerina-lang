@@ -35,7 +35,6 @@ public class SimpleConstantBaloNegativeTests {
 
     @BeforeClass
     public void setup() {
-        BaloCreator.cleanCacheDirectories();
         BaloCreator.createAndSetupBalo("test-src/balo/test_projects/test_project_negative", "testorg",
                 "simple_literal");
         compileResult = BCompileUtil.compile("test-src/balo/test_balo/constant/constant-negative.bal");

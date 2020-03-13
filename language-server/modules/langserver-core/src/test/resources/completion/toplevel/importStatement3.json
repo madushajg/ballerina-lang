@@ -22,14 +22,6 @@
       "insertTextFormat": "Snippet"
     },
     {
-      "label": "lang.boolean",
-      "kind": "Module",
-      "detail": "Module",
-      "sortText": "110",
-      "insertText": "lang.'boolean;",
-      "insertTextFormat": "Snippet"
-    },
-    {
       "label": "lang.xml",
       "kind": "Module",
       "detail": "Module",

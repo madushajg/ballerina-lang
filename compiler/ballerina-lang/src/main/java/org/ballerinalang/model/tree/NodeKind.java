@@ -47,7 +47,6 @@ public enum NodeKind {
     TABLE,
     TABLE_COLUMN,
     VARIABLE,
-    LET_VARIABLE,
     TUPLE_VARIABLE,
     RECORD_VARIABLE,
     ERROR_VARIABLE,
@@ -101,9 +100,6 @@ public enum NodeKind {
     XML_COMMENT_LITERAL,
     XML_PI_LITERAL,
     XML_SEQUENCE_LITERAL,
-    XML_ELEMENT_FILTER_EXPR,
-    XML_ELEMENT_ACCESS,
-    XML_NAVIGATION,
     STATEMENT_EXPRESSION,
     MATCH_EXPRESSION,
     MATCH_EXPRESSION_PATTERN_CLAUSE,
@@ -118,7 +114,6 @@ public enum NodeKind {
     DOCUMENTATION_REFERENCE,
     SERVICE_CONSTRUCTOR,
     STREAM_CONSTRUCTOR,
-    LET_EXPR,
 
     /* Statements */
     ABORT,
@@ -167,7 +162,6 @@ public enum NodeKind {
     FROM,
     WHERE,
     DO,
-    LET_CLAUSE,
 
     /* Types */
     ARRAY_TYPE,

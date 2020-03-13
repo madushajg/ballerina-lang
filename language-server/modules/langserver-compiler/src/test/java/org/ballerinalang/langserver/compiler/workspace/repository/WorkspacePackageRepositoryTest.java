@@ -32,7 +32,7 @@ import org.wso2.ballerinalang.compiler.tree.BLangPackage;
 import org.wso2.ballerinalang.compiler.util.CompilerContext;
 import org.wso2.ballerinalang.compiler.util.Name;
 import org.wso2.ballerinalang.compiler.util.Names;
-import org.wso2.ballerinalang.compiler.util.diagnotic.BLangDiagnosticLogHelper;
+import org.wso2.ballerinalang.compiler.util.diagnotic.BLangDiagnosticLog;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -165,7 +165,7 @@ public class WorkspacePackageRepositoryTest {
 
     private BLangPackage compileFile(String packageName, CompilerContext context) {
         BLangPackage bLangPackage = null;
-        BLangDiagnosticLogHelper.getInstance(context).resetErrorCount();
+        BLangDiagnosticLog.getInstance(context).errorCount = 0;
         Compiler compiler = Compiler.getInstance(context);
         bLangPackage = compiler.compile(packageName);
         LSPackageCache.getInstance(context).invalidate(bLangPackage.packageID);

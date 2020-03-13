@@ -138,7 +138,7 @@ public class BallerinaApplicationRunningState extends BallerinaRunningState<Ball
             ballerinaExecutor.withParameters("--sourceroot").withParameters(projectRoot)
                     .withParameterString(myConfiguration.getBallerinaToolParams());
 
-            if (BallerinaExperimentalFeatureSettings.getInstance(project).isAllowedExperimental()) {
+            if (BallerinaExperimentalFeatureSettings.getInstance().getAllowExperimental()) {
                 ballerinaExecutor.withParameters("--experimental");
             }
 
@@ -163,7 +163,7 @@ public class BallerinaApplicationRunningState extends BallerinaRunningState<Ball
                 ballerinaExecutor.withParameters("--debug", String.valueOf(myDebugPort));
             }
 
-            if (BallerinaExperimentalFeatureSettings.getInstance(project).isAllowedExperimental()) {
+            if (BallerinaExperimentalFeatureSettings.getInstance().getAllowExperimental()) {
                 ballerinaExecutor.withParameters("--experimental");
             }
 

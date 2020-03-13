@@ -117,10 +117,6 @@ public class SourceDirectoryManager {
         return null;
     }
 
-    public SourceDirectory getSourceDirectory() {
-        return sourceDirectory;
-    }
-
     // private methods
 
     private SourceDirectory initializeAndGetSourceDirectory(CompilerContext context) {

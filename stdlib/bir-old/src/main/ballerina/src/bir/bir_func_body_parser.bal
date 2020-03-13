@@ -164,8 +164,9 @@ public type FuncBodyParser object {
             kind = INS_KIND_NEW_XML_ELEMENT;
             var lhsOp = self.parseVarRef();
             var startTagOp = self.parseVarRef();
+            var endTagOp = self.parseVarRef();
             var defaultNsURIOp = self.parseVarRef();
-            NewXMLElement newXMLElement = {pos:pos, kind:kind, lhsOp:lhsOp, startTagOp:startTagOp,
+            NewXMLElement newXMLElement = {pos:pos, kind:kind, lhsOp:lhsOp, startTagOp:startTagOp, endTagOp:endTagOp,
                                            defaultNsURIOp:defaultNsURIOp};
             return newXMLElement;
         } else if (kindTag == INS_NEW_XML_TEXT) {

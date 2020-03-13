@@ -104,9 +104,7 @@ public enum InstructionKind {
     BITWISE_XOR((byte) 85),
     BITWISE_LEFT_SHIFT((byte) 86),
     BITWISE_RIGHT_SHIFT((byte) 87),
-    BITWISE_UNSIGNED_RIGHT_SHIFT((byte) 88),
-
-    PLATFORM((byte) 128);
+    BITWISE_UNSIGNED_RIGHT_SHIFT((byte) 88);
 
     byte value;
 

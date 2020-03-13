@@ -35,9 +35,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import static org.ballerinalang.jvm.util.BLangConstants.ARRAY_LANG_LIB;
@@ -67,75 +67,28 @@ public class TupleValueImpl extends AbstractArrayValue {
     public TupleValueImpl(Object[] values, BTupleType type) {
         this.refValues = values;
         this.tupleType = type;
-
-        List<BType> memTypes = type.getTupleTypes();
-        int memCount = memTypes.size();
-
-        if (values.length < memCount) {
-            this.refValues = Arrays.copyOf(refValues, memCount);
-            for (int i = values.length; i < memCount; i++) {
-                refValues[i] = memTypes.get(i).getZeroValue();
-            }
-        }
-        this.minSize = memTypes.size();
-        this.size = refValues.length;
+        this.size = values.length;
+        this.minSize = type.getTupleTypes().size();
     }
 
     @Deprecated
     public TupleValueImpl(BTupleType type) {
         this.tupleType = type;
-
-        List<BType> memTypes = this.tupleType.getTupleTypes();
-        int memTypeCount = memTypes.size();
-
-        this.minSize = this.size = memTypeCount;
-
-        if (type.getRestType() == null) {
-            this.maxSize = this.size;
-            this.refValues = new Object[this.size];
-        } else {
-            this.refValues = new Object[DEFAULT_ARRAY_SIZE];
-        }
-
-        for (int i = 0; i < memTypeCount; i++) {
-            BType memType = memTypes.get(i);
-            if (!TypeChecker.hasFillerValue(memType)) {
-                continue;
-            }
-
-            this.refValues[i] = memType.getZeroValue();
-        }
+        this.minSize = this.size = this.tupleType.getTupleTypes().size();
+        this.maxSize = (type.getRestType() != null) ? this.maxSize : this.size;
+        this.refValues = new Object[DEFAULT_ARRAY_SIZE];
+        AtomicInteger counter = new AtomicInteger(0);
+        this.tupleType.getTupleTypes()
+                .forEach(memType -> this.refValues[counter.getAndIncrement()] = memType.getEmptyValue());
     }
 
     @Deprecated
     public TupleValueImpl(BTupleType type, long size) {
         this.tupleType = type;
-
-        List<BType> memTypes = this.tupleType.getTupleTypes();
-        int memCount = memTypes.size();
-
-        this.size = size < memCount ? memCount : (int) size;
-        this.minSize = memCount;
-
-        if (type.getRestType() == null) {
-            this.maxSize = this.size;
-            this.refValues = new Object[this.size];
-        } else {
-            this.refValues = new Object[DEFAULT_ARRAY_SIZE];
-        }
-
-        if (size >= memCount) {
-            return;
-        }
-
-        for (int i = (int) size; i < memCount; i++) {
-            BType memType = memTypes.get(i);
-            if (!TypeChecker.hasFillerValue(memType)) {
-                continue;
-            }
-
-            this.refValues[i] = memType.getZeroValue();
-        }
+        this.size = (int) size;
+        this.minSize = type.getTupleTypes().size();
+        this.maxSize = (type.getRestType() != null) ? this.maxSize : (int) size;
+        this.refValues = new Object[DEFAULT_ARRAY_SIZE];
     }
 
     // ----------------------- get methods ----------------------------------------------------

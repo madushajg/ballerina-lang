@@ -20,13 +20,11 @@ package org.ballerinalang.langlib.xml;
 
 import org.ballerinalang.jvm.scheduling.Strand;
 import org.ballerinalang.jvm.util.exceptions.BLangExceptionHelper;
-import org.ballerinalang.jvm.values.ArrayValue;
 import org.ballerinalang.jvm.values.XMLValue;
 import org.ballerinalang.model.types.TypeKind;
 import org.ballerinalang.natives.annotations.Argument;
 import org.ballerinalang.natives.annotations.BallerinaFunction;
 import org.ballerinalang.natives.annotations.ReturnType;
-import org.wso2.ballerinalang.util.Lists;
 
 /**
  * Searches in children recursively for elements matching the name and returns a sequence containing them all.
@@ -37,7 +35,7 @@ import org.wso2.ballerinalang.util.Lists;
 @BallerinaFunction(
         orgName = "ballerina", packageName = "lang.xml",
         functionName = "selectDescendants",
-        args = {@Argument(name = "qname", type = TypeKind.ARRAY)},
+        args = {@Argument(name = "qname", type = TypeKind.STRING)},
         returnType = {@ReturnType(type = TypeKind.XML)},
         isPublic = true
 )
@@ -45,11 +43,9 @@ public class SelectDescendants {
 
     private static final String OPERATION = "select descendants from xml";
 
-    public static XMLValue selectDescendants(Strand strand, XMLValue xml, ArrayValue qnames) {
+    public static XMLValue selectDescendants(Strand strand, XMLValue xml, String qname) {
         try {
-            // todo: this need to support list of qnames.
-            String qname = qnames.getString(0);
-            return (XMLValue) xml.descendants(Lists.of(qname));
+            return (XMLValue) xml.descendants(qname);
         } catch (Throwable e) {
             BLangExceptionHelper.handleXMLException(OPERATION, e);
         }

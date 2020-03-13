@@ -15,8 +15,8 @@
 // under the License.
 
 function invalidTupleAssignment() {
-    [int, NoFillerObject] x1 = [1];
-    [int, boolean, NoFillerObject] x2 = [1, false];
+    [int, boolean] x1 = [1];
+    [int, boolean, string] x2 = [1, false];
     [int, boolean, string] x3 = [1, false, "abc"];
 }
 
@@ -111,7 +111,7 @@ function tupleAssignmentToAnyAndVar () {
 }
 
 function testInvalidNumberedLiterals () {
-    [float, int, NoFillerObject] x = [1.2, 3];
+    [float, int, string] x = [1.2, 3];
 }
 
 function testInvalidIndexAccess () {
@@ -164,6 +164,3 @@ function testInvalidConstIndex() {
     [string, int] tuple = ["str", 2];
     var v = tuple[INDEX_NEG_ONE];
 }
-
-type NoFillerObject abstract object {
-};

@@ -66,12 +66,8 @@ public final class XMLSequence extends XMLValue {
     }
 
     public XMLSequence(List<BXML> children) {
+        this();
         this.children = children;
-    }
-
-    public XMLSequence(BXML child) {
-        this.children = new ArrayList<>();
-        this.children.add(child);
     }
 
     public List<BXML> getChildrenList() {
@@ -220,7 +216,7 @@ public final class XMLSequence extends XMLValue {
         List<BXML> elementsSeq = new ArrayList<>();
         String qnameStr = getQname(qname).toString();
         for (BXML child : children) {
-            if (child.getNodeType() == XMLNodeType.ELEMENT && child.getElementName().equals(qnameStr)) {
+            if (child.getElementName().equals(qnameStr)) {
                 elementsSeq.add(child);
             }
         }
@@ -376,16 +372,16 @@ public final class XMLSequence extends XMLValue {
      * {@inheritDoc}
      */
     @Override
-    public XMLValue descendants(List<String> qnames) {
+    public XMLValue descendants(String qname) {
         List<BXML> descendants = new ArrayList<>();
-        for (BXML child : children) {
-            if (child.getNodeType() == XMLNodeType.ELEMENT) {
-                XMLItem element = (XMLItem) child;
-                String name = element.getQName().toString();
-                if (qnames.contains(name)) {
-                    descendants.add(element);
-                }
-                addDescendants(descendants, element, qnames);
+        for (BXML x : children) {
+            XMLItem element = (XMLItem) x;
+        if (element.getQName().toString().equals(getQname(qname).toString())) {
+                descendants.add(element);
+                continue;
+            }
+            if (element.getNodeType() == XMLNodeType.ELEMENT) {
+                addDescendants(descendants, element, getQname(qname).toString());
             }
         }
 

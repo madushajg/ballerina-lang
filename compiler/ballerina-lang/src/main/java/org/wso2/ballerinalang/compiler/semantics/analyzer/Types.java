@@ -70,7 +70,7 @@ import org.wso2.ballerinalang.compiler.util.CompilerContext;
 import org.wso2.ballerinalang.compiler.util.Names;
 import org.wso2.ballerinalang.compiler.util.NumericLiteralSupport;
 import org.wso2.ballerinalang.compiler.util.TypeTags;
-import org.wso2.ballerinalang.compiler.util.diagnotic.BLangDiagnosticLogHelper;
+import org.wso2.ballerinalang.compiler.util.diagnotic.BLangDiagnosticLog;
 import org.wso2.ballerinalang.compiler.util.diagnotic.DiagnosticPos;
 import org.wso2.ballerinalang.util.Flags;
 import org.wso2.ballerinalang.util.Lists;
@@ -107,7 +107,7 @@ public class Types {
 
     private SymbolTable symTable;
     private SymbolResolver symResolver;
-    private BLangDiagnosticLogHelper dlogHelper;
+    private BLangDiagnosticLog dlog;
     private Names names;
     private int finiteTypeCount = 0;
 
@@ -125,7 +125,7 @@ public class Types {
 
         this.symTable = SymbolTable.getInstance(context);
         this.symResolver = SymbolResolver.getInstance(context);
-        this.dlogHelper = BLangDiagnosticLogHelper.getInstance(context);
+        this.dlog = BLangDiagnosticLog.getInstance(context);
         this.names = Names.getInstance(context);
     }
 
@@ -175,7 +175,7 @@ public class Types {
         }
 
         // e.g. incompatible types: expected 'int', found 'string'
-        dlogHelper.error(pos, diagCode, expType, actualType);
+        dlog.error(pos, diagCode, expType, actualType);
         return symTable.semanticError;
     }
 
@@ -189,7 +189,6 @@ public class Types {
     public boolean isLax(BType type) {
         switch (type.tag) {
             case TypeTags.JSON:
-            case TypeTags.XML:
                 return true;
             case TypeTags.MAP:
                 return isLax(((BMapType) type).constraint);
@@ -883,19 +882,19 @@ public class Types {
     }
 
     public boolean checkArrayEquality(BType source, BType target, Set<TypePair> unresolvedTypes) {
-        if (target.tag != TypeTags.ARRAY || source.tag != TypeTags.ARRAY) {
-            return false;
+        if (target.tag == TypeTags.ARRAY && source.tag == TypeTags.ARRAY) {
+            // Both types are array types
+            BArrayType lhsArrayType = (BArrayType) target;
+            BArrayType rhsArrayType = (BArrayType) source;
+            if (lhsArrayType.state == BArrayState.UNSEALED) {
+                return checkArrayEquality(lhsArrayType.eType, rhsArrayType.eType, unresolvedTypes);
+            }
+            return checkSealedArraySizeEquality(rhsArrayType, lhsArrayType)
+                    && isArrayTypesAssignable(rhsArrayType.eType, lhsArrayType.eType, unresolvedTypes);
         }
 
-        BArrayType lhsArrayType = (BArrayType) target;
-        BArrayType rhsArrayType = (BArrayType) source;
-        if (lhsArrayType.state == BArrayState.UNSEALED) {
-            return rhsArrayType.state == BArrayState.UNSEALED &&
-                    isSameType(lhsArrayType.eType, rhsArrayType.eType, unresolvedTypes);
-        }
-
-        return checkSealedArraySizeEquality(rhsArrayType, lhsArrayType)
-                && isSameType(lhsArrayType.eType, rhsArrayType.eType, unresolvedTypes);
+        // Now one or both types are not array types and they have to be equal
+        return isSameType(source, target);
     }
 
     public boolean checkSealedArraySizeEquality(BArrayType rhsArrayType, BArrayType lhsArrayType) {
@@ -1054,7 +1053,7 @@ public class Types {
                     foreachNode.varType = ((BRecordType) foreachNode.resultType).fields.get(0).type;
                     return;
                 }
-                dlogHelper.error(foreachNode.collection.pos, DiagnosticCode.INCOMPATIBLE_ITERATOR_FUNCTION_SIGNATURE);
+                dlog.error(foreachNode.collection.pos, DiagnosticCode.INCOMPATIBLE_ITERATOR_FUNCTION_SIGNATURE);
                 // fallthrough
             case TypeTags.SEMANTIC_ERROR:
                 foreachNode.varType = symTable.semanticError;
@@ -1065,8 +1064,8 @@ public class Types {
                 foreachNode.varType = symTable.semanticError;
                 foreachNode.resultType = symTable.semanticError;
                 foreachNode.nillableResultType = symTable.semanticError;
-                dlogHelper.error(foreachNode.collection.pos, DiagnosticCode.ITERABLE_NOT_SUPPORTED_COLLECTION,
-                                 collectionType);
+                dlog.error(foreachNode.collection.pos, DiagnosticCode.ITERABLE_NOT_SUPPORTED_COLLECTION,
+                        collectionType);
                 return;
         }
 
@@ -1141,7 +1140,7 @@ public class Types {
                     fromClause.varType = ((BRecordType) fromClause.resultType).fields.get(0).type;
                     return;
                 }
-                dlogHelper.error(fromClause.collection.pos, DiagnosticCode.INCOMPATIBLE_ITERATOR_FUNCTION_SIGNATURE);
+                dlog.error(fromClause.collection.pos, DiagnosticCode.INCOMPATIBLE_ITERATOR_FUNCTION_SIGNATURE);
                 // fallthrough
             case TypeTags.SEMANTIC_ERROR:
                 fromClause.varType = symTable.semanticError;
@@ -1152,8 +1151,8 @@ public class Types {
                 fromClause.varType = symTable.semanticError;
                 fromClause.resultType = symTable.semanticError;
                 fromClause.nillableResultType = symTable.semanticError;
-                dlogHelper.error(fromClause.collection.pos, DiagnosticCode.ITERABLE_NOT_SUPPORTED_COLLECTION,
-                                 collectionType);
+                dlog.error(fromClause.collection.pos, DiagnosticCode.ITERABLE_NOT_SUPPORTED_COLLECTION,
+                        collectionType);
                 return;
         }
 
@@ -2524,7 +2523,7 @@ public class Types {
             }
         }
 
-        dlogHelper.error(function.returnTypeNode.pos, diagnosticCode, function.returnTypeNode.type.toString());
+        dlog.error(function.returnTypeNode.pos, diagnosticCode, function.returnTypeNode.type.toString());
     }
 
     /**

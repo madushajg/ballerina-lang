@@ -27,8 +27,6 @@ import org.ballerinalang.jvm.XMLNodeType;
 import org.ballerinalang.jvm.XMLValidator;
 import org.ballerinalang.jvm.types.BMapType;
 import org.ballerinalang.jvm.types.BTypes;
-import org.ballerinalang.jvm.util.exceptions.BallerinaErrorReasons;
-import org.ballerinalang.jvm.util.exceptions.BallerinaException;
 import org.ballerinalang.jvm.values.api.BMap;
 import org.ballerinalang.jvm.values.api.BString;
 import org.ballerinalang.jvm.values.api.BXML;
@@ -38,12 +36,10 @@ import org.ballerinalang.jvm.values.freeze.Status;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
-import java.lang.ref.WeakReference;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -70,21 +66,15 @@ public final class XMLItem extends XMLValue {
     private QName name;
     private XMLSequence children;
     private MapValue<String, String> attributes;
-    // Keep track of probable parents of xml element to detect probable cycles in xml.
-    private List<WeakReference<XMLItem>> probableParents;
 
     public XMLItem(QName name, XMLSequence children) {
         this.name = name;
         this.children = children;
-        for (BXML child : children.children) {
-            addParent(child, this);
-        }
         attributes = new MapValueImpl<>(new BMapType(BTypes.typeString));
-        probableParents = new ArrayList<>();
     }
 
     /**
-     * Initialize a {@link XMLItem}.
+     * Initialize a {@link XMLItem} from a {@link org.apache.axiom.om.OMNode} object.
      *
      * @param name element's qualified name
      */
@@ -326,22 +316,14 @@ public final class XMLItem extends XMLValue {
 
         if (seq.getNodeType() == XMLNodeType.SEQUENCE) {
             children = (XMLSequence) seq;
-            for (BXML child : children.children) {
-                addParent(child);
-            }
         } else {
-            addParent(seq);
-            children = new XMLSequence(seq);
+            children = new XMLSequence();
+            children.children.add(seq);
         }
     }
 
     /**
-     * @param seq children to add to this element.
-     *
-     * addChildren is only used for constructing xml tree from xml literals, and only usage is to directly codegen
-     * the adding children.
-     *
-     * @deprecated
+     * {@inheritDoc}
      */
     @Override
     @Deprecated
@@ -364,49 +346,12 @@ public final class XMLItem extends XMLValue {
                     && appendingList.get(0).getNodeType() == TEXT) {
                 mergeAdjoiningTextNodesIntoList(leftList, appendingList);
             } else {
-                for (BXML bxml : appendingList) {
-                    addParent(bxml, this);
-                }
                 leftList.addAll(appendingList);
             }
         } else {
-            addParent(seq, this);
             leftList.add(seq);
         }
         this.children = new XMLSequence(leftList);
-    }
-
-
-    private void addParent(BXML child) {
-        ensureAcyclicGraph(child, this);
-        addParent(child, this);
-    }
-
-    // This method does not ensure acyclicness of tree after adding the children. Hence this method shold only be
-    // use in scenarios where cyclic xml construction is impossible, that is only when constructing xml tree from
-    // xml literal syntax, or after ensuring the new xml tree is not cyclic.
-    private void addParent(BXML child, XMLItem thisElem) {
-        if (child.getNodeType() == ELEMENT) {
-            ((XMLItem) child).probableParents.add(new WeakReference<>(thisElem));
-        }
-    }
-
-    private void ensureAcyclicGraph(BXML newSubTree, XMLItem current) {
-        for (WeakReference<XMLItem> probableParentRef : current.probableParents) {
-            XMLItem parent = probableParentRef.get();
-            // probable parent is the actual parent.
-            if (parent.children.children.contains(current)) {
-                // If new subtree is in the lineage of current node, adding this newSubTree forms a cycle.
-                if (parent == newSubTree) {
-                    throw createXMLCycleError();
-                }
-                ensureAcyclicGraph(newSubTree, parent);
-            }
-        }
-    }
-
-    private BallerinaException createXMLCycleError() {
-        return new BallerinaException(BallerinaErrorReasons.XML_OPERATION_ERROR, "Cycle detected");
     }
 
     private void mergeAdjoiningTextNodesIntoList(List leftList, List<BXML> appendingList) {
@@ -445,13 +390,11 @@ public final class XMLItem extends XMLValue {
      * {@inheritDoc}
      */
     @Override
-    public XMLValue descendants(List<String> qnames) {
-        if (qnames.contains(getQName().toString())) {
-            List<BXML> descendants = Arrays.asList(this);
-            addDescendants(descendants, this, qnames);
-            return new XMLSequence(descendants);
+    public XMLValue descendants(String qname) {
+        if (getQName().toString().equals(qname)) {
+            return new XMLSequence(Arrays.asList(this));
         }
-        return children.descendants(qnames);
+        return children.descendants(qname);
     }
 
     /**
@@ -628,24 +571,7 @@ public final class XMLItem extends XMLValue {
 
         Collections.reverse(toRemove);
         for (Integer index : toRemove) {
-            BXML removed = children.remove(index.intValue());
-            removeParentReference(removed);
-        }
-    }
-
-    private void removeParentReference(BXML removedItem) {
-        if (removedItem.getNodeType() != ELEMENT) {
-            return;
-        }
-
-        XMLItem item = (XMLItem) removedItem;
-        for (Iterator<WeakReference<XMLItem>> iterator = item.probableParents.iterator(); iterator.hasNext();) {
-            WeakReference<XMLItem> probableParent = iterator.next();
-            XMLItem parent = probableParent.get();
-            if (parent == this) {
-                probableParent.clear();
-                iterator.remove();
-            }
+            children.remove(index.intValue());
         }
     }
 
@@ -657,7 +583,6 @@ public final class XMLItem extends XMLValue {
         if (FreezeUtils.isOpenForFreeze(this.freezeStatus, freezeStatus)) {
             this.freezeStatus = freezeStatus;
         }
-        this.children.attemptFreeze(freezeStatus);
         this.attributes.attemptFreeze(freezeStatus);
     }
 
@@ -667,7 +592,6 @@ public final class XMLItem extends XMLValue {
     @Override
     public void freezeDirect() {
         this.freezeStatus.setFrozen();
-        this.children.freezeDirect();
         this.attributes.freezeDirect();
     }
 

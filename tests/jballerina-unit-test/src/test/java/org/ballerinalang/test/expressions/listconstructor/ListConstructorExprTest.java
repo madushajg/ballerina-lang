@@ -32,12 +32,11 @@ import org.testng.annotations.Test;
  */
 public class ListConstructorExprTest {
 
-    private CompileResult result, resultInferType, resultNegative;
+    private CompileResult result, resultNegative;
 
     @BeforeClass
     public void setup() {
         result = BCompileUtil.compile("test-src/expressions/listconstructor/list_constructor.bal");
-        resultInferType = BCompileUtil.compile("test-src/expressions/listconstructor/list_constructor_infer_type.bal");
         resultNegative = BCompileUtil.compile(
                 "test-src/expressions/listconstructor/list_constructor_negative.bal");
     }
@@ -55,28 +54,14 @@ public class ListConstructorExprTest {
         BAssertUtil.validateError(resultNegative, i++, "invalid list constructor expression: " +
                 "types cannot be inferred for '[v1, v2, v3]'", 18, 24);
         BAssertUtil.validateError(resultNegative, i++, "tuple and expression size does not match",
-                22, 31);
+                22, 20);
         BAssertUtil.validateError(resultNegative, i++, "tuple and expression size does not match",
-                23, 56);
+                23, 34);
         Assert.assertEquals(resultNegative.getErrorCount(), i);
     }
 
     @Test
     public void testListConstructorAutoFillExpr() {
         BRunUtil.invoke(result, "testListConstructorAutoFillExpr");
-    }
-
-    @Test
-    public void testListConstructorWithBroadACET() {
-        BRunUtil.invoke(result, "testListConstructorWithAnyACET");
-        BRunUtil.invoke(result, "testListConstructorWithAnydataACET");
-        BRunUtil.invoke(result, "testListConstructorWithJsonACET");
-    }
-
-    @Test
-    public void testListConstructorInferType() {
-        BRunUtil.invoke(resultInferType, "inferSimpleTuple");
-        BRunUtil.invoke(resultInferType, "inferStructuredTuple");
-        BRunUtil.invoke(resultInferType, "inferNestedTuple");
     }
 }

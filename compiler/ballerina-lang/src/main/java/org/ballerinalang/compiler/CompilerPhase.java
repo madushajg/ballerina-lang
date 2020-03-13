@@ -44,9 +44,9 @@ public enum CompilerPhase {
 
     DESUGAR("desugar"),
 
-    BIR_GEN("birGen"),
+    CODE_GEN("codeGen"),
 
-    CODE_GEN("codeGen");
+    BIR_GEN("birGen");
 
     private String value;
 

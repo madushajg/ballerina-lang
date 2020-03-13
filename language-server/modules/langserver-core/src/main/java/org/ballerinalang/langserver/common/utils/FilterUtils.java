@@ -604,9 +604,6 @@ public class FilterUtils {
             case TypeTags.XML:
                 entries.putAll(symTable.langXmlModuleSymbol.scope.entries);
                 break;
-            case TypeTags.BOOLEAN:
-                entries.putAll(symTable.langBooleanModuleSymbol.scope.entries);
-                break;
             default:
                 break;
         }

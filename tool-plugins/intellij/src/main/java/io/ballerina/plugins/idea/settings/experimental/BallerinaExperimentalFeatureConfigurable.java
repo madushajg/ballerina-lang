@@ -17,10 +17,8 @@
 package io.ballerina.plugins.idea.settings.experimental;
 
 import com.intellij.openapi.options.SearchableConfigurable;
-import com.intellij.openapi.project.Project;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.UIUtil;
-import io.ballerina.plugins.idea.preloading.LSPUtils;
 import io.ballerina.plugins.idea.sdk.BallerinaSdkUtils;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -38,15 +36,15 @@ import javax.swing.JPanel;
  */
 public class BallerinaExperimentalFeatureConfigurable implements SearchableConfigurable {
 
-    private final BallerinaExperimentalFeatureSettings ballerinaExperimentalFeatureSettings;
-    private Project project;
     private JCheckBox myCbAllowExperimental;
+
+    @NotNull
+    private final BallerinaExperimentalFeatureSettings ballerinaExperimentalFeatureSettings;
     private final boolean myIsDialog;
 
-    public BallerinaExperimentalFeatureConfigurable(Project project, boolean dialogMode) {
-        ballerinaExperimentalFeatureSettings = BallerinaExperimentalFeatureSettings.getInstance(project);
-        this.project = project;
-        this.myIsDialog = dialogMode;
+    public BallerinaExperimentalFeatureConfigurable(boolean dialogMode) {
+        ballerinaExperimentalFeatureSettings = BallerinaExperimentalFeatureSettings.getInstance();
+        myIsDialog = dialogMode;
     }
 
     @Nullable
@@ -65,22 +63,21 @@ public class BallerinaExperimentalFeatureConfigurable implements SearchableConfi
 
     @Override
     public boolean isModified() {
-        return ballerinaExperimentalFeatureSettings.isAllowedExperimental() != myCbAllowExperimental.isSelected();
+        return ballerinaExperimentalFeatureSettings.getAllowExperimental() != myCbAllowExperimental.isSelected();
     }
 
     @Override
     public void apply() {
         ballerinaExperimentalFeatureSettings.setAllowExperimental(myCbAllowExperimental.isSelected());
-        // Tries to notify the setting changes to the language server and if failed, requests to reload the project.
-        boolean success = LSPUtils.notifyConfigChanges(project);
-        if (!success) {
-            BallerinaSdkUtils.showRestartDialog(project);
-        }
+        // Need to prompt a restart action to clear and re re-spawn language server instance with the changed
+        // configuration.
+        // Todo - Figure out a way to apply changes without restarting IDE.
+        BallerinaSdkUtils.showRestartDialog(null);
     }
 
     @Override
     public void reset() {
-        myCbAllowExperimental.setSelected(ballerinaExperimentalFeatureSettings.isAllowedExperimental());
+        myCbAllowExperimental.setSelected(ballerinaExperimentalFeatureSettings.getAllowExperimental());
     }
 
     @NotNull

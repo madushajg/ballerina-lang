@@ -72,11 +72,4 @@ public class ByteAsIntTest {
                 {"testByteStructuredTypeAsIntStructuredType"}
         };
     }
-
-    @Test
-    public void testByteArrayCastToIntArray() {
-        BRunUtil.invoke(result, "testByteArrayCastToIntArray");
-        BRunUtil.invoke(result, "testDowncastOfByteArrayCastToIntArray");
-        BRunUtil.invoke(result, "testInherentTypeViolationOfByteArrayCastToIntArray");
-    }
 }

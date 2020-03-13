@@ -41,9 +41,8 @@ public class TerminatorMac extends TerminatorUnix {
     }
 
     public void terminate() {
-        terminate(LS_SCRIPT_PROCESS_ID);
-        terminate(LS_CMD_PROCESS_ID);
-        terminate(DEBUG_SCRIPT_PROCESS_ID);
+        terminate(LS_PROCESS_ID);
+        terminate(DEBUG_PROCESS_ID);
     }
 
     /**

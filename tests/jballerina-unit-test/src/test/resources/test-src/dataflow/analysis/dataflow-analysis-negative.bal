@@ -721,8 +721,3 @@ function testUninitializedVarWithWhile2() {
     }
     int j = a; // variable 'a' is not initialized
 }
-
-function testUninitializedVarWithLet() {
-   int i;
-   int b = let int x = 4 + i in 2 * x * i;
-}

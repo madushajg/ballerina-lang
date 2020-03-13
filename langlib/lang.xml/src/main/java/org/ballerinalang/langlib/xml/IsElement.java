@@ -17,6 +17,7 @@
  */
 package org.ballerinalang.langlib.xml;
 
+import org.ballerinalang.jvm.XMLNodeType;
 import org.ballerinalang.jvm.scheduling.Strand;
 import org.ballerinalang.jvm.values.XMLValue;
 import org.ballerinalang.model.types.TypeKind;
@@ -39,6 +40,6 @@ import org.ballerinalang.natives.annotations.ReturnType;
 public class IsElement {
 
     public static boolean isElement(Strand strand, XMLValue xmlValue) {
-        return org.ballerinalang.langlib.internal.IsElement.isElement(xmlValue);
+        return xmlValue.getNodeType() == XMLNodeType.ELEMENT;
     }
 }

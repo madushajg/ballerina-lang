@@ -32,6 +32,7 @@ import org.wso2.ballerinalang.compiler.tree.BLangImportPackage;
 import org.wso2.ballerinalang.compiler.tree.BLangNode;
 import org.wso2.ballerinalang.compiler.tree.BLangPackage;
 import org.wso2.ballerinalang.compiler.tree.BLangService;
+import org.wso2.ballerinalang.compiler.tree.BLangWorker;
 import org.wso2.ballerinalang.compiler.tree.statements.BLangBlockStmt;
 import org.wso2.ballerinalang.compiler.tree.statements.BLangForeach;
 import org.wso2.ballerinalang.compiler.tree.statements.BLangIf;
@@ -84,11 +85,7 @@ public class VisibleEndpointVisitor extends LSNodeVisitor {
         this.symbolEnv = pkgEnv;
 
         List<TopLevelNode> topLevelNodes = pkgNode.topLevelNodes;
-        pkgNode.getImports().forEach(importPackage -> {
-            if (importPackage.symbol != null) {
-                this.packageMap.put(importPackage.symbol.pkgID, importPackage);
-            }
-        });
+        pkgNode.getImports().forEach(importPackage -> this.packageMap.put(importPackage.symbol.pkgID, importPackage));
 
         topLevelNodes.stream()
                 .filter(CommonUtil.checkInvalidTypesDefs())
@@ -116,9 +113,21 @@ public class VisibleEndpointVisitor extends LSNodeVisitor {
                 .forEach(bLangFunction -> this.acceptNode(bLangFunction, serviceEnv));
     }
 
-    @Override
+    private void acceptNode(BLangNode node, SymbolEnv env) {
+        if (node == null) {
+            return;
+        }
+        SymbolEnv prevEnv = this.symbolEnv;
+        this.symbolEnv = env;
+        node.accept(this);
+        this.symbolEnv = prevEnv;
+    }
+
     public void visit(BLangBlockStmt blockNode) {
         // resolve locally declared endpoints
+        if (blockNode == null) {
+            return;
+        }
         this.resolveEndpointsFromStatements(blockNode.stmts, blockNode);
     }
 
@@ -130,36 +139,39 @@ public class VisibleEndpointVisitor extends LSNodeVisitor {
 
     @Override
     public void visit(BLangIf ifNode) {
-        this.acceptNode(ifNode.body, this.symbolEnv);
-        this.acceptNode(ifNode.elseStmt, this.symbolEnv);
+        this.visit(ifNode.body);
+        if (ifNode.elseStmt instanceof  BLangBlockStmt) {
+            this.visit((BLangBlockStmt) ifNode.elseStmt);
+        }
     }
 
     @Override
     public void visit(BLangWhile whileNode) {
-        this.acceptNode(whileNode.body, this.symbolEnv);
+        this.visit(whileNode.body);
+    }
+
+    @Override
+    public void visit(BLangWorker workerNode) {
+        this.visit((BLangBlockFunctionBody) workerNode.body);
     }
 
     @Override
     public void visit(BLangForeach foreach) {
-        this.acceptNode(foreach.body, this.symbolEnv);
+        this.visit(foreach.body);
     }
 
     @Override
     public void visit(BLangTransaction transactionNode) {
-        this.acceptNode(transactionNode.transactionBody, this.symbolEnv);
-        this.acceptNode(transactionNode.onRetryBody, this.symbolEnv);
-        this.acceptNode(transactionNode.committedBody, this.symbolEnv);
-        this.acceptNode(transactionNode.abortedBody, this.symbolEnv);
-    }
-    
-    private void acceptNode(BLangNode node, SymbolEnv env) {
-        if (node == null) {
-            return;
+        this.visit(transactionNode.transactionBody);
+        if (transactionNode.onRetryBody != null) {
+            this.visit(transactionNode.onRetryBody);
         }
-        SymbolEnv prevEnv = this.symbolEnv;
-        this.symbolEnv = env;
-        node.accept(this);
-        this.symbolEnv = prevEnv;
+        if (transactionNode.committedBody != null) {
+            this.visit(transactionNode.committedBody);
+        }
+        if (transactionNode.abortedBody != null) {
+            this.visit(transactionNode.abortedBody);
+        }
     }
 
     /**

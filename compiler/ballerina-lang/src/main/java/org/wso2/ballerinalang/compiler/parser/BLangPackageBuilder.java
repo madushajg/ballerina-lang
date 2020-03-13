@@ -48,9 +48,7 @@ import org.ballerinalang.model.tree.VariableNode;
 import org.ballerinalang.model.tree.expressions.ExpressionNode;
 import org.ballerinalang.model.tree.expressions.StreamConstructorNode;
 import org.ballerinalang.model.tree.expressions.XMLAttributeNode;
-import org.ballerinalang.model.tree.expressions.XMLElementFilter;
 import org.ballerinalang.model.tree.expressions.XMLLiteralNode;
-import org.ballerinalang.model.tree.expressions.XMLNavigationAccess;
 import org.ballerinalang.model.tree.statements.BlockStatementNode;
 import org.ballerinalang.model.tree.statements.ForkJoinNode;
 import org.ballerinalang.model.tree.statements.IfNode;
@@ -83,7 +81,6 @@ import org.wso2.ballerinalang.compiler.tree.BLangVariable;
 import org.wso2.ballerinalang.compiler.tree.BLangXMLNS;
 import org.wso2.ballerinalang.compiler.tree.clauses.BLangDoClause;
 import org.wso2.ballerinalang.compiler.tree.clauses.BLangFromClause;
-import org.wso2.ballerinalang.compiler.tree.clauses.BLangLetClause;
 import org.wso2.ballerinalang.compiler.tree.clauses.BLangSelectClause;
 import org.wso2.ballerinalang.compiler.tree.clauses.BLangWhereClause;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangAccessExpression;
@@ -102,7 +99,6 @@ import org.wso2.ballerinalang.compiler.tree.expressions.BLangIndexBasedAccess;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangIntRangeExpression;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangInvocation;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangLambdaFunction;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangLetExpression;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangListConstructorExpr;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangLiteral;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangMarkdownDocumentationLine;
@@ -139,10 +135,7 @@ import org.wso2.ballerinalang.compiler.tree.expressions.BLangWorkerSyncSendExpr;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangXMLAttribute;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangXMLAttributeAccess;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangXMLCommentLiteral;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangXMLElementAccess;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangXMLElementFilter;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangXMLElementLiteral;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangXMLNavigationAccess;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangXMLProcInsLiteral;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangXMLQName;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangXMLQuotedString;
@@ -185,7 +178,6 @@ import org.wso2.ballerinalang.compiler.tree.types.BLangConstrainedType;
 import org.wso2.ballerinalang.compiler.tree.types.BLangErrorType;
 import org.wso2.ballerinalang.compiler.tree.types.BLangFiniteTypeNode;
 import org.wso2.ballerinalang.compiler.tree.types.BLangFunctionTypeNode;
-import org.wso2.ballerinalang.compiler.tree.types.BLangLetVariable;
 import org.wso2.ballerinalang.compiler.tree.types.BLangObjectTypeNode;
 import org.wso2.ballerinalang.compiler.tree.types.BLangRecordTypeNode;
 import org.wso2.ballerinalang.compiler.tree.types.BLangStructureTypeNode;
@@ -201,7 +193,7 @@ import org.wso2.ballerinalang.compiler.util.Names;
 import org.wso2.ballerinalang.compiler.util.NumericLiteralSupport;
 import org.wso2.ballerinalang.compiler.util.QuoteType;
 import org.wso2.ballerinalang.compiler.util.TypeTags;
-import org.wso2.ballerinalang.compiler.util.diagnotic.BLangDiagnosticLogHelper;
+import org.wso2.ballerinalang.compiler.util.diagnotic.BLangDiagnosticLog;
 import org.wso2.ballerinalang.compiler.util.diagnotic.DiagnosticPos;
 
 import java.util.ArrayDeque;
@@ -238,8 +230,6 @@ public class BLangPackageBuilder {
 
     private Stack<List<BLangVariable>> varListStack = new Stack<>();
 
-    private Stack<List<BLangLetVariable>> letVarListStack = new Stack<>();
-
     private Stack<List<BLangRecordVariableKeyValue>> recordVarListStack = new Stack<>();
 
     private Stack<List<BLangRecordVarRefKeyValue>> recordVarRefListStack = new Stack<>();
@@ -274,8 +264,6 @@ public class BLangPackageBuilder {
 
     private Stack<BLangFromClause> fromClauseNodeStack = new Stack<>();
 
-    private Stack<BLangLetClause> letClauseNodeStack = new Stack<>();
-
     private Stack<BLangSelectClause> selectClauseNodeStack = new Stack<>();
 
     private Stack<BLangWhereClause> whereClauseNodeStack = new Stack<>();
@@ -300,8 +288,6 @@ public class BLangPackageBuilder {
 
     private Deque<BLangMatch> matchStmtStack;
 
-    private Stack<XMLElementFilter> elementFilterStack = new Stack<>();
-
     private Stack<Set<Whitespace>> operatorWs = new Stack<>();
 
     private Stack<Set<Whitespace>> objectFieldBlockWs = new Stack<>();
@@ -325,12 +311,12 @@ public class BLangPackageBuilder {
     private BLangAnonymousModelHelper anonymousModelHelper;
     private CompilerOptions compilerOptions;
     private SymbolTable symTable;
-    private BLangDiagnosticLogHelper dlog;
+    private BLangDiagnosticLog dlog;
 
     private static final String IDENTIFIER_LITERAL_PREFIX = "'";
 
     public BLangPackageBuilder(CompilerContext context, CompilationUnitNode compUnit) {
-        this.dlog = BLangDiagnosticLogHelper.getInstance(context);
+        this.dlog = BLangDiagnosticLog.getInstance(context);
         this.anonymousModelHelper = BLangAnonymousModelHelper.getInstance(context);
         this.compilerOptions = CompilerOptions.getInstance(context);
         this.symTable = SymbolTable.getInstance(context);
@@ -591,9 +577,6 @@ public class BLangPackageBuilder {
         if (paramsAvail) {
             functionTypeNode.addWS(commaWsStack.pop());
             functionTypeNode.params.addAll(this.varListStack.pop());
-        } else if (restParamAvail) {
-            // VarListStack pops out the empty list added to the var list stack if no non-rest params are available
-            this.varListStack.pop();
         }
 
         if (restParamAvail) {
@@ -617,10 +600,6 @@ public class BLangPackageBuilder {
 
     void startVarList() {
         this.varListStack.push(new ArrayList<>());
-    }
-
-    void startLetVarList() {
-        this.letVarListStack.push(new ArrayList<>());
     }
 
     void startFunctionDef(int annotCount, boolean isLambda) {
@@ -1150,26 +1129,8 @@ public class BLangPackageBuilder {
         addStmtToCurrentBlock(varDefNode);
     }
 
-    void addSimpleLetVariableDefStatement(DiagnosticPos pos, Set<Whitespace> ws, String identifier,
-                                          DiagnosticPos identifierPos, boolean isExpressionAvailable,
-                                          boolean isDeclaredWithVar, int numAnnotations) {
-        BLangSimpleVariableDef varDefNode = createSimpleVariableDef(pos, ws, identifier, identifierPos,
-                true, isExpressionAvailable, isDeclaredWithVar);
-        if (!this.bindingPatternIdentifierWS.isEmpty()) {
-            varDefNode.addWS(this.bindingPatternIdentifierWS.pop());
-        }
-        attachAnnotations(varDefNode.var, numAnnotations, false);
-        addLetVarDecl(varDefNode);
-    }
-
     void addBindingPatternNameWhitespace(Set<Whitespace> ws) {
         this.bindingPatternIdentifierWS.push(ws);
-    }
-
-    private void addLetVarDecl(VariableDefinitionNode definitionNode) {
-        BLangLetVariable letVariable = (BLangLetVariable) TreeBuilder.createLetVariableNode();
-        letVariable.definitionNode = definitionNode;
-        this.letVarListStack.peek().add(letVariable);
     }
 
     private BLangSimpleVariableDef createSimpleVariableDef(DiagnosticPos pos, Set<Whitespace> ws, String identifier,
@@ -1206,24 +1167,10 @@ public class BLangPackageBuilder {
         addStmtToCurrentBlock(varDefNode);
     }
 
-    void addTupleVariableLetDefStatement(DiagnosticPos pos, Set<Whitespace> ws, boolean isDeclaredWithVar,
-                                         int numAnnotations) {
-        BLangTupleVariableDef varDefNode = createTupleVariableDef(pos, ws, true, true, isDeclaredWithVar);
-        attachAnnotations(varDefNode.var, numAnnotations, false);
-        addLetVarDecl(varDefNode);
-    }
-
     void addErrorVariableDefStatement(DiagnosticPos pos, Set<Whitespace> ws, boolean isFinal,
                                       boolean isDeclaredWithVar) {
         BLangErrorVariableDef varDefNode = createErrorVariableDef(pos, ws, isFinal, true, isDeclaredWithVar);
         addStmtToCurrentBlock(varDefNode);
-    }
-
-    void addErrorVariableLetDefStatement(DiagnosticPos pos, Set<Whitespace> ws, boolean isDeclaredWithVar,
-                                         int numAnnotations) {
-        BLangErrorVariableDef varDefNode = createErrorVariableDef(pos, ws, true, true, isDeclaredWithVar);
-        attachAnnotations(varDefNode.errorVariable, numAnnotations, false);
-        addLetVarDecl(varDefNode);
     }
 
     private BLangTupleVariableDef createTupleVariableDef(DiagnosticPos pos, Set<Whitespace> ws, boolean isFinal,
@@ -1270,14 +1217,6 @@ public class BLangPackageBuilder {
                                        boolean isDeclaredWithVar) {
         BLangRecordVariableDef varDefNode = createRecordVariableDef(pos, ws, isFinal, true, isDeclaredWithVar);
         addStmtToCurrentBlock(varDefNode);
-    }
-
-    void addRecordVariableLetDefStatement(DiagnosticPos pos, Set<Whitespace> ws, boolean isDeclaredWithVar,
-                                          int numAnnotations) {
-        BLangRecordVariableDef varDefNode = createRecordVariableDef(pos, ws, true, true, isDeclaredWithVar);
-        attachAnnotations(varDefNode.var, numAnnotations, false);
-        addLetVarDecl(varDefNode);
-
     }
 
     private BLangRecordVariableDef createRecordVariableDef(DiagnosticPos pos, Set<Whitespace> ws, boolean isFinal,
@@ -1501,21 +1440,6 @@ public class BLangPackageBuilder {
         recordLiteralNodes.peek().fields.add(keyValue);
     }
 
-    void addLetClause(DiagnosticPos pos) {
-        BLangLetClause letClause = (BLangLetClause) TreeBuilder.createLetClauseNode();
-        letClause.pos = pos;
-        letClause.letVarDeclarations = letVarListStack.pop();
-        letClauseNodeStack.push(letClause);
-    }
-
-    void addLetExpression(DiagnosticPos pos) {
-        BLangLetExpression letExpression = (BLangLetExpression) TreeBuilder.createLetExpressionNode();
-        letExpression.expr = (BLangExpression) exprNodeStack.pop();
-        letExpression.pos = pos;
-        letExpression.letVarDeclarations = letVarListStack.pop();
-        addExpressionNode(letExpression);
-    }
-
     void addSpreadOpRecordField(Set<Whitespace> ws) {
         BLangRecordLiteral.BLangRecordSpreadOperatorField spreadOperatorField =
                 (BLangRecordLiteral.BLangRecordSpreadOperatorField) TreeBuilder.createRecordSpreadOperatorField();
@@ -1726,18 +1650,8 @@ public class BLangPackageBuilder {
     }
 
     void createFieldBasedAccessNode(DiagnosticPos pos, Set<Whitespace> ws, String fieldName, DiagnosticPos fieldNamePos,
-                                    String nsPrefixName, DiagnosticPos nsPrefixPos,
                                     FieldKind fieldType, boolean optionalFieldAccess) {
-        BLangFieldBasedAccess fieldBasedAccess;
-        if (nsPrefixName != null) {
-            BLangFieldBasedAccess.BLangNSPrefixedFieldBasedAccess accessWithPrefixNode =
-                    (BLangFieldBasedAccess.BLangNSPrefixedFieldBasedAccess)
-                            TreeBuilder.createFieldBasedAccessWithPrefixNode();
-            accessWithPrefixNode.nsPrefix = createIdentifier(nsPrefixPos, nsPrefixName);
-            fieldBasedAccess = accessWithPrefixNode;
-        } else {
-            fieldBasedAccess = (BLangFieldBasedAccess) TreeBuilder.createFieldBasedAccessNode();
-        }
+        BLangFieldBasedAccess fieldBasedAccess = (BLangFieldBasedAccess) TreeBuilder.createFieldBasedAccessNode();
         fieldBasedAccess.pos = pos;
         fieldBasedAccess.addWS(ws);
         fieldBasedAccess.field = createIdentifier(fieldNamePos, fieldName, ws);
@@ -1868,10 +1782,6 @@ public class BLangPackageBuilder {
         while (fromClauseNodeStack.size() > 0) {
             queryExpr.addFromClauseNode(fromClauseNodeStack.pop());
         }
-        Collections.reverse(letClauseNodeStack);
-        while (letClauseNodeStack.size() > 0) {
-            queryExpr.addLetClause(letClauseNodeStack.pop());
-        }
         queryExpr.setSelectClauseNode(selectClauseNodeStack.pop());
         Collections.reverse(whereClauseNodeStack);
         while (whereClauseNodeStack.size() > 0) {
@@ -1976,10 +1886,7 @@ public class BLangPackageBuilder {
         while (fromClauseNodeStack.size() > 0) {
             queryAction.addFromClauseNode(fromClauseNodeStack.pop());
         }
-        Collections.reverse(letClauseNodeStack);
-        while (letClauseNodeStack.size() > 0) {
-            queryAction.addLetClauseNode(letClauseNodeStack.pop());
-        }
+
         Collections.reverse(whereClauseNodeStack);
         while (whereClauseNodeStack.size() > 0) {
             queryAction.addWhereClauseNode(whereClauseNodeStack.pop());
@@ -3641,42 +3548,5 @@ public class BLangPackageBuilder {
             keyValue.keyExpr = varRef;
         }
         waitCollectionStack.peek().keyValuePairs.add(keyValue);
-    }
-
-    public void addXMLElementAccessFilter(DiagnosticPos pos, Set<Whitespace> ws, String ns,
-                                          DiagnosticPos nsPos, String elementName, DiagnosticPos elemNamePos) {
-        elementFilterStack.push(new BLangXMLElementFilter(pos, ws, ns, nsPos, elementName, elemNamePos));
-    }
-
-    public void createXMLElementAccessNode(DiagnosticPos pos, Set<Whitespace> ws, int filterCount) {
-        List<BLangXMLElementFilter> filters = popFilters(filterCount);
-
-        BLangExpression expr = (BLangExpression) this.exprNodeStack.pop();
-        BLangXMLElementAccess elementAccess = new BLangXMLElementAccess(pos, ws, expr, filters);
-        addExpressionNode(elementAccess);
-    }
-
-    public void createXMLNavigationAccessNode(DiagnosticPos currentPos, Set<Whitespace> ws,
-                                              int filterCount, int starCount, boolean isIndexed) {
-        BLangExpression childIndex = null;
-        if (isIndexed) {
-            childIndex = (BLangExpression) this.exprNodeStack.pop();
-        }
-        List<BLangXMLElementFilter> filters = popFilters(filterCount);
-        BLangExpression expr = (BLangExpression) this.exprNodeStack.pop();
-        BLangXMLNavigationAccess xmlNavigationAccess =
-                new BLangXMLNavigationAccess(currentPos, ws, expr, filters,
-                        XMLNavigationAccess.NavAccessType.fromInt(starCount), childIndex);
-        addExpressionNode(xmlNavigationAccess);
-    }
-
-    private List<BLangXMLElementFilter> popFilters(int filterCount) {
-        ArrayList<BLangXMLElementFilter> filters = new ArrayList<>();
-        for (int i = 0; i < filterCount; i++) {
-            filters.add((BLangXMLElementFilter) elementFilterStack.pop());
-        }
-        // Filters were collected from right to left, hence need to reverse the order.
-        Collections.reverse(filters);
-        return filters;
     }
 }

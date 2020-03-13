@@ -50,11 +50,8 @@ import org.ballerinalang.jvm.values.RefValue;
 import org.ballerinalang.jvm.values.StreamValue;
 import org.ballerinalang.jvm.values.TableValue;
 import org.ballerinalang.jvm.values.TypedescValue;
-import org.ballerinalang.jvm.values.XMLSequence;
-import org.ballerinalang.jvm.values.XMLText;
 import org.ballerinalang.jvm.values.XMLValue;
 import org.ballerinalang.jvm.values.api.BValue;
-import org.ballerinalang.jvm.values.api.BXML;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -426,46 +423,11 @@ public class TypeChecker {
             return isEqual(lhsValue, rhsValue);
         }
 
-        if (lhsType.getTag() == TypeTags.XML_TAG && rhsType.getTag() == TypeTags.XML_TAG) {
-            return isXMLValueRefEqual((XMLValue) lhsValue, (XMLValue) rhsValue);
-        }
-
         if (isHandleType(lhsType) && isHandleType(rhsType)) {
             return isHandleValueRefEqual(lhsValue, rhsValue);
         }
 
         return false;
-    }
-
-    private static boolean isXMLValueRefEqual(XMLValue lhsValue, XMLValue rhsValue) {
-        if (lhsValue.getNodeType() != rhsValue.getNodeType()) {
-            return false;
-        }
-
-        if (lhsValue.getNodeType() == XMLNodeType.SEQUENCE && rhsValue.getNodeType() == XMLNodeType.SEQUENCE) {
-            return isXMLSequenceRefEqual((XMLSequence) lhsValue, (XMLSequence) rhsValue);
-        }
-
-        if (lhsValue.getNodeType() == XMLNodeType.TEXT && rhsValue.getNodeType() == XMLNodeType.TEXT) {
-            return ((XMLText) lhsValue).equals(rhsValue);
-        }
-        return false;
-    }
-
-    private static boolean isXMLSequenceRefEqual(XMLSequence lhsValue, XMLSequence rhsValue) {
-        Iterator<BXML> lhsIter = lhsValue.getChildrenList().iterator();
-        Iterator<BXML> rhsIter = rhsValue.getChildrenList().iterator();
-        while (lhsIter.hasNext() && rhsIter.hasNext()) {
-            BXML l = lhsIter.next();
-            BXML r = rhsIter.next();
-            if (!(l == r || isXMLValueRefEqual((XMLValue) l, (XMLValue) r))) {
-                return false;
-            }
-        }
-        // lhs hasNext = false & rhs hasNext = false -> empty sequences, hence ref equal
-        // lhs hasNext = true & rhs hasNext = true would never reach here
-        // only one hasNext method returns true means requences are of different sizes, hence not ref equal
-        return lhsIter.hasNext() == rhsIter.hasNext();
     }
 
     /**
@@ -810,19 +772,10 @@ public class TypeChecker {
         }
 
         //If element type is a value type, then check same type
-        BType targetElementType = targetType.getElementType();
-        int targetElementTypeTag = targetElementType.getTag();
-
-        BType sourceElementType = sourceArrayType.getElementType();
-
-        if (targetElementTypeTag <= TypeTags.BOOLEAN_TAG) {
-            if (targetElementTypeTag == TypeTags.INT_TAG && sourceElementType.getTag() == TypeTags.BYTE_TAG) {
-                return true;
-            }
-
-            return sourceElementType.getTag() == targetElementTypeTag;
+        if (targetType.getElementType().getTag() <= TypeTags.BOOLEAN_TAG) {
+            return sourceArrayType.getElementType().getTag() == targetType.getElementType().getTag();
         }
-        return checkIsType(sourceElementType, targetElementType, unresolvedTypes);
+        return checkIsType(sourceArrayType.getElementType(), targetType.getElementType(), unresolvedTypes);
     }
 
     private static boolean checkIsTupleType(BType sourceType, BTupleType targetType, List<TypePair> unresolvedTypes) {
@@ -1803,7 +1756,7 @@ public class TypeChecker {
     }
 
     private static boolean checkFillerValue(BArrayType type) {
-        return type.getState() == ArrayState.UNSEALED || hasFillerValue(type.getElementType());
+        return !(type.getState() == ArrayState.CLOSED_SEALED || type.getState() == ArrayState.OPEN_SEALED);
     }
 
     private static boolean checkFillerValue(BObjectType type) {

@@ -29,7 +29,6 @@ import java.util.Map;
 /**
  * @since 0.94
  */
-@Deprecated
 public class BLangXMLAttributeAccess extends BLangIndexBasedAccess implements IndexBasedAccessNode {
 
     public Map<Name, BXMLNSSymbol> namespaces;

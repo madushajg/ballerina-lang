@@ -19,9 +19,6 @@ function testIncompatibleListConstructorExprs1() {
 }
 
 function testIncompatibleListConstructorExprs2() {
-    [NoFillerObject, int] a = [];
-    [[int, int], [NoFillerObject, NoFillerObject]] b = [];
+    [int, int] a = [];
+    [[int, int], [int, int]] b = [];
 }
-
-type NoFillerObject abstract object {
-};

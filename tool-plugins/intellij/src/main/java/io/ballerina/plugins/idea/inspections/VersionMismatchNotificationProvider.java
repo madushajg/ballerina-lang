@@ -32,9 +32,6 @@ import io.ballerina.plugins.idea.sdk.BallerinaSdkService;
 import io.ballerina.plugins.idea.sdk.BallerinaSdkUtils;
 import org.jetbrains.annotations.NotNull;
 
-import static io.ballerina.plugins.idea.sdk.BallerinaSdkUtils.getMajorVersion;
-import static io.ballerina.plugins.idea.sdk.BallerinaSdkUtils.getMinorVersion;
-
 /**
  * Provides wrong module type message if the ballerina file is not in a Ballerina module.
  */
@@ -87,6 +84,16 @@ public class VersionMismatchNotificationProvider extends EditorNotifications.Pro
             }
         }
         return null;
+    }
+
+    @NotNull
+    private String getMajorVersion(@NotNull String version) {
+        return version.contains(".") ? version.replace('-', '.').split("[.]")[0] : "";
+    }
+
+    @NotNull
+    private String getMinorVersion(@NotNull String version) {
+        return version.contains(".") ? version.replace('-', '.').split("[.]")[1] : "";
     }
 
     @NotNull

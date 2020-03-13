@@ -49,11 +49,9 @@ public class BLangDiagnosticLog implements DiagnosticLog {
 
     public int errorCount = 0;
 
-    protected DiagnosticListener listener;
+    private DiagnosticListener listener;
     private PackageCache pkgCache;
 
-    // TODO: 3/6/20 Make package private.
-    @Deprecated
     public static BLangDiagnosticLog getInstance(CompilerContext context) {
         BLangDiagnosticLog dLogger = context.get(DIAGNOSTIC_LOG_KEY);
         if (dLogger == null) {
@@ -71,9 +69,6 @@ public class BLangDiagnosticLog implements DiagnosticLog {
         if (this.listener == null) {
             this.listener = new DefaultDiagnosticListener();
         }
-    }
-
-    protected BLangDiagnosticLog() {
     }
 
     public void error(DiagnosticPos pos, DiagnosticCode code, Object... args) {
@@ -104,7 +99,7 @@ public class BLangDiagnosticLog implements DiagnosticLog {
         return MessageFormat.format(msgKey, args);
     }
 
-    protected void reportDiagnostic(BDiagnostic diagnostic) {
+    private void reportDiagnostic(BDiagnostic diagnostic) {
         if (diagnostic.kind == Diagnostic.Kind.ERROR) {
             errorCount++;
         }

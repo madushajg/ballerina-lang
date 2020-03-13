@@ -158,13 +158,10 @@ public class BasicTupleTest {
     }
 
     @Test(description = "Test union expected type for list constructor")
-    public void testTupleUnionExpectedType() {
-        BRunUtil.invoke(result, "testTupleUnionExpectedType");
-    }
-
-    @Test
-    public void testUnionRestDescriptor() {
-        BRunUtil.invoke(result, "testUnionRestDescriptor");
+    public void testAmbiguousTupleExpectedType() {
+        BValue[] returns = BRunUtil.invoke(result, "testAmbiguousTupleExpectedType");
+        Assert.assertEquals(returns[0].stringValue(), "[\"y\", \"a\", 1]");
+        Assert.assertEquals(returns[1].stringValue(), "[\"y\", \"str\"]");
     }
 
     @Test(description = "Test negative scenarios of assigning tuple literals")
@@ -172,9 +169,9 @@ public class BasicTupleTest {
         Assert.assertEquals(resultNegative.getErrorCount(), 30);
         int i = 0;
         BAssertUtil.validateError(
-                resultNegative, i++, "tuple and expression size does not match", 18, 32);
+                resultNegative, i++, "tuple and expression size does not match", 18, 25);
         BAssertUtil.validateError(
-                resultNegative, i++, "tuple and expression size does not match", 19, 41);
+                resultNegative, i++, "tuple and expression size does not match", 19, 33);
         BAssertUtil.validateError(
                 resultNegative, i++, "ambiguous type '([int,boolean,string]|[any,boolean,string])?'", 34, 63);
         BAssertUtil.validateError(
@@ -213,7 +210,7 @@ public class BasicTupleTest {
     @Test(description = "Test negatives of index based access of tuple type")
     public void testNegativesOfTupleType() {
         int i = 16;
-        BAssertUtil.validateError(resultNegative, i++, "tuple and expression size does not match", 114, 38);
+        BAssertUtil.validateError(resultNegative, i++, "tuple and expression size does not match", 114, 30);
         BAssertUtil.validateError(resultNegative, i++, "list index out of range: index: '-1'", 119, 16);
         BAssertUtil.validateError(resultNegative, i++, "list index out of range: index: '3'", 120, 16);
         BAssertUtil.validateError(resultNegative, i++, "incompatible types: expected 'int', found 'string'", 122, 16);

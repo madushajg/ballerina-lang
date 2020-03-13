@@ -67,12 +67,10 @@ import java.util.regex.Matcher;
 import java.util.stream.Stream;
 
 import static com.intellij.util.containers.ContainerUtil.newLinkedHashSet;
-import static io.ballerina.plugins.idea.BallerinaConstants.BALLERINA_CMD;
 import static io.ballerina.plugins.idea.BallerinaConstants.BALLERINA_COMPOSER_LIB_PATH;
 import static io.ballerina.plugins.idea.BallerinaConstants.BALLERINA_CONFIG_FILE_NAME;
 import static io.ballerina.plugins.idea.BallerinaConstants.BALLERINA_EXECUTABLE_NAME;
 import static io.ballerina.plugins.idea.BallerinaConstants.BALLERINA_EXEC_PATH;
-import static io.ballerina.plugins.idea.BallerinaConstants.BALLERINA_HOME_CMD;
 import static io.ballerina.plugins.idea.BallerinaConstants.BALLERINA_LS_LAUNCHER_NAME;
 import static io.ballerina.plugins.idea.BallerinaConstants.BALLERINA_LS_LAUNCHER_PATH;
 import static io.ballerina.plugins.idea.BallerinaConstants.BALLERINA_PLUGIN_ID;
@@ -180,16 +178,6 @@ public class BallerinaSdkUtils {
         return null;
     }
 
-    @NotNull
-    public static String getMajorVersion(@NotNull String version) {
-        return version.contains(".") ? version.replace('-', '.').split("[.]")[0] : "";
-    }
-
-    @NotNull
-    public static String getMinorVersion(@NotNull String version) {
-        return version.contains(".") ? version.replace('-', '.').split("[.]")[1] : "";
-    }
-
     @Nullable
     public static String getBallerinaPluginVersion() {
         IdeaPluginDescriptor balPluginDescriptor = PluginManager.getPlugin(PluginId.getId(BALLERINA_PLUGIN_ID));
@@ -269,7 +257,7 @@ public class BallerinaSdkUtils {
             return "";
         }
 
-        String ballerinaPath = getByCommand(String.format("%s %s", BALLERINA_CMD, BALLERINA_HOME_CMD));
+        String ballerinaPath = getByCommand("ballerina home");
         if (ballerinaPath.isEmpty()) {
             // Todo - Verify
             // Tries for default installer based locations since "ballerina" commands might not work
@@ -277,16 +265,16 @@ public class BallerinaSdkUtils {
             // runtime.
             String routerScriptPath = getByDefaultPath();
             if (OSUtils.isWindows()) {
-                ballerinaPath = getByCommand(String.format("\"%s\" %s", routerScriptPath, BALLERINA_HOME_CMD));
+                ballerinaPath = getByCommand(String.format("\"%s\" home", routerScriptPath));
             } else {
-                ballerinaPath = getByCommand(String.format("%s %s", routerScriptPath, BALLERINA_HOME_CMD));
+                ballerinaPath = getByCommand(String.format("%s home", routerScriptPath));
             }
         }
 
         return ballerinaPath;
     }
 
-    public static String getByCommand(String cmd) {
+    private static String getByCommand(String cmd) {
         java.util.Scanner s;
         try {
             // This may returns a symlink which links to the real path.
@@ -313,7 +301,7 @@ public class BallerinaSdkUtils {
      * because of the IntelliJ issue of PATH variable might not being identified by the IntelliJ java
      * runtime.
      */
-    public static String getByDefaultPath() {
+    private static String getByDefaultPath() {
         try {
             String path = getDefaultPath();
             if (path.isEmpty()) {

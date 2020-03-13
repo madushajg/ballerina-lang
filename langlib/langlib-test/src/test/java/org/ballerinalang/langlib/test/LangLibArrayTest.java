@@ -248,11 +248,6 @@ public class LangLibArrayTest {
     }
 
     @Test
-    public void testLastIndexOf() {
-        BRunUtil.invoke(compileResult, "testLastIndexOf");
-    }
-
-    @Test
     public void testReverse() {
         BValue[] returns = BRunUtil.invoke(compileResult, "testReverse");
 

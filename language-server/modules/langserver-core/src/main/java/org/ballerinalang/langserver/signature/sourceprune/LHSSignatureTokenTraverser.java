@@ -213,9 +213,6 @@ class LHSSignatureTokenTraverser extends AbstractTokenTraverser {
         } else if (type == BallerinaParser.SEMICOLON) {
             this.forcedProcessedToken = true;
             return true;
-        } else if (type == BallerinaParser.ELLIPSIS) {
-            this.forcedProcessedToken = true;
-            return true;
         } else if (type == BallerinaParser.COLON) {
             if (this.capturedFirstColon) {
                 this.forcedProcessedToken = true;

@@ -45,11 +45,10 @@ import org.wso2.ballerinalang.compiler.tree.BLangTypeDefinition;
 import org.wso2.ballerinalang.compiler.tree.BLangXMLNS;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangConstant;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangExpression;
-import org.wso2.ballerinalang.compiler.tree.expressions.BLangLetExpression;
 import org.wso2.ballerinalang.compiler.util.CompilerContext;
 import org.wso2.ballerinalang.compiler.util.Name;
 import org.wso2.ballerinalang.compiler.util.Names;
-import org.wso2.ballerinalang.compiler.util.diagnotic.BLangDiagnosticLogHelper;
+import org.wso2.ballerinalang.compiler.util.diagnotic.BLangDiagnosticLog;
 import org.wso2.ballerinalang.compiler.util.diagnotic.DiagnosticPos;
 
 import java.util.ArrayList;
@@ -81,7 +80,7 @@ public class CompilerPluginRunner extends BLangNodeVisitor {
     private SymbolResolver symResolver;
     private Names names;
     private final Types types;
-    private BLangDiagnosticLogHelper dlog;
+    private BLangDiagnosticLog dlog;
 
     private DiagnosticPos defaultPos;
     private CompilerContext context;
@@ -108,7 +107,7 @@ public class CompilerPluginRunner extends BLangNodeVisitor {
         this.symResolver = SymbolResolver.getInstance(context);
         this.names = Names.getInstance(context);
         this.types = Types.getInstance(context);
-        this.dlog = BLangDiagnosticLogHelper.getInstance(context);
+        this.dlog = BLangDiagnosticLog.getInstance(context);
         this.context = context;
 
         this.pluginList = new ArrayList<>();
@@ -199,9 +198,6 @@ public class CompilerPluginRunner extends BLangNodeVisitor {
 
     public void visit(BLangConstant constant) {
         /* ignore */
-    }
-
-    public void visit(BLangLetExpression letExpression) {
     }
 
     // private methods

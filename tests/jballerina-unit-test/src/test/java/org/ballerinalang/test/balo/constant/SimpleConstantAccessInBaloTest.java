@@ -41,7 +41,6 @@ public class SimpleConstantAccessInBaloTest {
 
     @BeforeClass
     public void setup() {
-        BaloCreator.cleanCacheDirectories();
         BaloCreator.createAndSetupBalo("test-src/balo/test_projects/test_project", "testorg", "foo");
         compileResult = BCompileUtil.compile("test-src/balo/test_balo/constant/constant-access.bal");
     }
