@@ -26,6 +26,7 @@ import org.ballerinalang.jvm.XMLFactory;
 import org.ballerinalang.jvm.XMLNodeType;
 import org.ballerinalang.jvm.XMLValidator;
 import org.ballerinalang.jvm.types.BMapType;
+import org.ballerinalang.jvm.types.BType;
 import org.ballerinalang.jvm.types.BTypes;
 import org.ballerinalang.jvm.util.exceptions.BallerinaErrorReasons;
 import org.ballerinalang.jvm.util.exceptions.BallerinaException;
@@ -37,6 +38,7 @@ import org.ballerinalang.jvm.values.freeze.State;
 import org.ballerinalang.jvm.values.freeze.Status;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.nio.charset.StandardCharsets;
@@ -463,7 +465,14 @@ public final class XMLItem extends XMLValue {
             if (outputStream instanceof BallerinaXMLSerializer) {
                 ((BallerinaXMLSerializer) outputStream).write(this);
             } else {
-                (new BallerinaXMLSerializer(outputStream)).write(this);
+                BallerinaXMLSerializer ballerinaXMLSerializer = new BallerinaXMLSerializer(outputStream);
+                ballerinaXMLSerializer.write(this);
+                try {
+                    ballerinaXMLSerializer.flush();
+                    ballerinaXMLSerializer.close();
+                } catch (IOException e) {
+                    throw new BallerinaException(e);
+                }
             }
         } catch (Throwable t) {
             handleXmlException("error occurred during writing the message to the output stream: ", t);
@@ -739,5 +748,10 @@ public final class XMLItem extends XMLValue {
             }
         }
         return false;
+    }
+
+    @Override
+    public BType getType() {
+        return BTypes.typeElement;
     }
 }

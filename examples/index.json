@@ -79,6 +79,10 @@
                 "url": "closures"
             },
             {
+                "name": "Expression-bodied Functions",
+                "url": "expression-bodied-functions"
+            },
+            {
                 "name": "Functional Iteration",
                 "url": "functional-iteration"
             },
@@ -257,6 +261,14 @@
         "column": 1,
         "category": "Language concepts",
         "samples": [
+            {
+                "name": "Shift Expressions",
+                "url": "shift-expressions"
+            },
+            {
+                "name": "Binary Bitwise Expressions",
+                "url": "binary-bitwise-expressions"
+            },
             {
                 "name": "Compound Assignment Operators",
                 "url": "compound-assignment-operators"
@@ -617,6 +629,10 @@
             {
                 "name": "AWS Lambda Deployment",
                 "url": "awslambda-deployment"
+            },
+            {
+                "name": "Knative Deployment",
+                "url": "knative-deployment"
             }
         ]
     },
@@ -1026,12 +1042,12 @@
         "column": 3,
         "category": "Working over the network",
         "samples": [{
-                "name": "Secured Service with JWT",
-                "url": "secured-service-with-jwt"
-            },
-            {
                 "name": "Secured Service with Basic Auth",
                 "url": "secured-service-with-basic-auth"
+            },
+            {
+                "name": "Secured Service with JWT",
+                "url": "secured-service-with-jwt"
             },
             {
                 "name": "Secured Service with OAuth2",
@@ -1048,6 +1064,42 @@
             {
                 "name": "Secured Client with OAuth2",
                 "url": "secured-client-with-oauth2"
+            }
+        ]
+    },
+    {
+        "title": "Email",
+        "column": 2,
+        "category": "Working over the network",
+        "samples": [{
+                "name": "Send and Receive Emails",
+                "url": "send-and-receive-emails"
+            }
+        ]
+    },
+    {
+        "title": "Streams",
+        "column": 0,
+        "category": "Preview features",
+        "samples": [
+            {
+                "name": "Streams",
+                "url": "streams"
+            }
+        ]
+    },
+    {
+        "title": "Query",
+        "column": 1,
+        "category": "Preview features",
+        "samples": [
+            {
+                "name": "Query Expression",
+                "url": "query-expression"
+            },
+            {
+                "name": "Query Action",
+                "url": "query-action"
             }
         ]
     },
