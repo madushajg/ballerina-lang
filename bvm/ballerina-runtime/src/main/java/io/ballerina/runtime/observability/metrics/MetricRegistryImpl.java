@@ -29,14 +29,14 @@ import java.util.stream.Collectors;
 /**
  * Registry for keeping metrics by name.
  */
-public class MetricRegistry {
+public class MetricRegistryImpl implements MetricRegistry {
 
     // Metric Provider implementation, which provides actual implementations
     private final MetricProvider metricProvider;
     // Metrics Map by ID
     private final ConcurrentMap<MetricId, Metric> metrics;
 
-    public MetricRegistry(MetricProvider metricProvider) {
+    public MetricRegistryImpl(MetricProvider metricProvider) {
         this.metricProvider = metricProvider;
         this.metrics = new ConcurrentHashMap<>();
     }
@@ -47,6 +47,7 @@ public class MetricRegistry {
      * @param id The {@link MetricId}.
      * @return A existing or a new {@link Counter} metric.
      */
+    @Override
     public Counter counter(MetricId id) {
         return getOrCreate(id, Counter.class, () -> metricProvider.newCounter(id));
     }
@@ -57,6 +58,7 @@ public class MetricRegistry {
      * @param counter The {@link Counter} instance.
      * @return A existing or a newly registered {@link Counter} metric.
      */
+    @Override
     public Counter register(Counter counter) {
         return register(counter, Counter.class);
     }
@@ -66,6 +68,7 @@ public class MetricRegistry {
      *
      * @param counter The {@link Counter} instance.
      */
+    @Override
     public void unregister(Counter counter) {
         unregister(counter, Counter.class);
     }
@@ -77,6 +80,7 @@ public class MetricRegistry {
      * @param statisticConfigs {@link StatisticConfig statistic configurations} to summarize gauge values.
      * @return A existing or a new {@link Gauge} metric.
      */
+    @Override
     public Gauge gauge(MetricId id, StatisticConfig... statisticConfigs) {
         return getOrCreate(id, Gauge.class, () -> metricProvider.newGauge(id, statisticConfigs));
     }
@@ -87,6 +91,7 @@ public class MetricRegistry {
      * @param gauge The {@link Gauge} instance.
      * @return A existing or a newly registered {@link Gauge} metric.
      */
+    @Override
     public Gauge register(Gauge gauge) {
         return register(gauge, Gauge.class);
     }
@@ -96,6 +101,7 @@ public class MetricRegistry {
      *
      * @param gauge The {@link Gauge} instance.
      */
+    @Override
     public void unregister(Gauge gauge) {
         unregister(gauge, Gauge.class);
     }
@@ -109,6 +115,7 @@ public class MetricRegistry {
      * @param <T>           The type of the state object from which the gauge value is extracted.
      * @return A existing or a new {@link PolledGauge} metric.
      */
+    @Override
     public <T> PolledGauge polledGauge(MetricId id, T obj, ToDoubleFunction<T> valueFunction) {
         return getOrCreate(id, PolledGauge.class, () -> metricProvider.newPolledGauge(id, obj, valueFunction));
     }
@@ -119,6 +126,7 @@ public class MetricRegistry {
      * @param gauge The {@link PolledGauge} instance.
      * @return A existing or a newly registered {@link PolledGauge} metric.
      */
+    @Override
     public PolledGauge register(PolledGauge gauge) {
         return register(gauge, PolledGauge.class);
     }
@@ -128,6 +136,7 @@ public class MetricRegistry {
      *
      * @param gauge The {@link PolledGauge} instance.
      */
+    @Override
     public void unregister(PolledGauge gauge) {
         unregister(gauge, PolledGauge.class);
     }
@@ -189,20 +198,24 @@ public class MetricRegistry {
      *
      * @param name the name of the metric
      */
+    @Override
     public void remove(String name) {
         List<MetricId> ids = metrics.keySet().stream()
                 .filter(id -> id.getName().equals(name)).collect(Collectors.toList());
         ids.forEach(metrics::remove);
     }
 
+    @Override
     public MetricProvider getMetricProvider() {
         return metricProvider;
     }
 
+    @Override
     public Metric[] getAllMetrics() {
         return this.metrics.values().toArray(new Metric[this.metrics.values().size()]);
     }
 
+    @Override
     public Metric lookup(MetricId metricId) {
         return metrics.get(metricId);
     }
