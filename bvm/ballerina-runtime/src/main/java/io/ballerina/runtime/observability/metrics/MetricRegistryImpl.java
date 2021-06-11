@@ -41,101 +41,46 @@ public class MetricRegistryImpl implements MetricRegistry {
         this.metrics = new ConcurrentHashMap<>();
     }
 
-    /**
-     * Use {@link Counter#builder(String)}.
-     *
-     * @param id The {@link MetricId}.
-     * @return A existing or a new {@link Counter} metric.
-     */
     @Override
     public Counter counter(MetricId id) {
         return getOrCreate(id, Counter.class, () -> metricProvider.newCounter(id));
     }
 
-    /**
-     * Registers the counter metrics instance.
-     *
-     * @param counter The {@link Counter} instance.
-     * @return A existing or a newly registered {@link Counter} metric.
-     */
     @Override
     public Counter register(Counter counter) {
         return register(counter, Counter.class);
     }
 
-    /**
-     * Unregister the counter metrics instance.
-     *
-     * @param counter The {@link Counter} instance.
-     */
     @Override
     public void unregister(Counter counter) {
         unregister(counter, Counter.class);
     }
 
-    /**
-     * Use {@link Gauge#builder(String)}.
-     *
-     * @param id               The {@link MetricId}.
-     * @param statisticConfigs {@link StatisticConfig statistic configurations} to summarize gauge values.
-     * @return A existing or a new {@link Gauge} metric.
-     */
     @Override
     public Gauge gauge(MetricId id, StatisticConfig... statisticConfigs) {
         return getOrCreate(id, Gauge.class, () -> metricProvider.newGauge(id, statisticConfigs));
     }
 
-    /**
-     * Registers the gauge metrics instance.
-     *
-     * @param gauge The {@link Gauge} instance.
-     * @return A existing or a newly registered {@link Gauge} metric.
-     */
     @Override
     public Gauge register(Gauge gauge) {
         return register(gauge, Gauge.class);
     }
 
-    /**
-     * Unregister the gauge metrics instance.
-     *
-     * @param gauge The {@link Gauge} instance.
-     */
     @Override
     public void unregister(Gauge gauge) {
         unregister(gauge, Gauge.class);
     }
 
-    /**
-     * Use {@link PolledGauge#builder(String, Object, ToDoubleFunction)}.
-     *
-     * @param id            The {@link MetricId}.
-     * @param obj           State object used to compute a value.
-     * @param valueFunction Function that produces an instantaneous gauge value from the state object.
-     * @param <T>           The type of the state object from which the gauge value is extracted.
-     * @return A existing or a new {@link PolledGauge} metric.
-     */
     @Override
     public <T> PolledGauge polledGauge(MetricId id, T obj, ToDoubleFunction<T> valueFunction) {
         return getOrCreate(id, PolledGauge.class, () -> metricProvider.newPolledGauge(id, obj, valueFunction));
     }
 
-    /**
-     * Registers the polled gauge metrics instance.
-     *
-     * @param gauge The {@link PolledGauge} instance.
-     * @return A existing or a newly registered {@link PolledGauge} metric.
-     */
     @Override
     public PolledGauge register(PolledGauge gauge) {
         return register(gauge, PolledGauge.class);
     }
 
-    /**
-     * Unregisters the polled gauge metrics instance.
-     *
-     * @param gauge The {@link PolledGauge} instance.
-     */
     @Override
     public void unregister(PolledGauge gauge) {
         unregister(gauge, PolledGauge.class);
@@ -193,11 +138,6 @@ public class MetricRegistryImpl implements MetricRegistry {
         }
     }
 
-    /**
-     * Removes the metric with the given name.
-     *
-     * @param name the name of the metric
-     */
     @Override
     public void remove(String name) {
         List<MetricId> ids = metrics.keySet().stream()
