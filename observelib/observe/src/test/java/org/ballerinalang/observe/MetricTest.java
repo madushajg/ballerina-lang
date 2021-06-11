@@ -18,7 +18,7 @@
 package org.ballerinalang.observe;
 
 import io.ballerina.runtime.observability.metrics.DefaultMetricRegistry;
-import io.ballerina.runtime.observability.metrics.MetricRegistry;
+import io.ballerina.runtime.observability.metrics.MetricRegistryImpl;
 import org.ballerinalang.observe.metrics.extension.defaultimpl.DefaultMetricProvider;
 import org.testng.annotations.BeforeSuite;
 
@@ -33,6 +33,6 @@ public class MetricTest {
     public void init() {
         DefaultMetricProvider metricProvider = new DefaultMetricProvider();
         metricProvider.init();
-        DefaultMetricRegistry.setInstance(new MetricRegistry(metricProvider));
+        DefaultMetricRegistry.setInstance(new MetricRegistryImpl(metricProvider));
     }
 }

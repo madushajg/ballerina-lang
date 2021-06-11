@@ -19,6 +19,7 @@ package org.ballerinalang.observe.metrics.extension.defaultimpl;
 
 import io.ballerina.runtime.observability.metrics.Counter;
 import io.ballerina.runtime.observability.metrics.MetricRegistry;
+import io.ballerina.runtime.observability.metrics.MetricRegistryImpl;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -33,7 +34,7 @@ public class CounterTagsTest {
     @BeforeClass
     public void init() {
         DefaultMetricProvider metricProvider = new DefaultMetricProvider();
-        metricRegistry = new MetricRegistry(metricProvider);
+        metricRegistry = new MetricRegistryImpl(metricProvider);
     }
 
     @Test
