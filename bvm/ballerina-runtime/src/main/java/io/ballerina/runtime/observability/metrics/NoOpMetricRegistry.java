@@ -27,12 +27,11 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.ToDoubleFunction;
 
 /**
- * Provide No-Op implementations of metrics registry.
+ * Provide No-Op implementations of {@link MetricRegistry}.
  */
 public class NoOpMetricRegistry implements MetricRegistry {
-    // Metric Provider implementation, which provides actual implementations
+
     private final MetricProvider metricProvider;
-    // Metrics Map by ID
     private final ConcurrentMap<MetricId, Metric> metrics;
 
     public NoOpMetricRegistry(MetricProvider metricProvider) {

@@ -22,6 +22,9 @@ import io.ballerina.runtime.observability.metrics.spi.MetricProvider;
 import java.util.function.ToDoubleFunction;
 
 
+/**
+ * This represents the interface for metrics registry to be used with {@link DefaultMetricRegistry}.
+ */
 public interface MetricRegistry {
 
     /**

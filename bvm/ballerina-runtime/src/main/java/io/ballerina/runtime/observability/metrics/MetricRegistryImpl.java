@@ -27,7 +27,7 @@ import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 
 /**
- * Registry for keeping metrics by name.
+ * The implementation of {@link MetricRegistry} for keeping metrics by name.
  */
 public class MetricRegistryImpl implements MetricRegistry {
 
