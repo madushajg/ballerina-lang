@@ -22,7 +22,7 @@ import io.ballerina.runtime.api.values.BString;
 import io.ballerina.runtime.observability.ObserveUtils;
 import io.ballerina.runtime.observability.metrics.BallerinaMetricsObserver;
 import io.ballerina.runtime.observability.metrics.DefaultMetricRegistry;
-import io.ballerina.runtime.observability.metrics.MetricRegistryImpl;
+import io.ballerina.runtime.observability.metrics.MetricRegistry;
 import io.ballerina.runtime.observability.metrics.noop.NoOpMetricProvider;
 import io.ballerina.runtime.observability.metrics.spi.MetricProvider;
 import io.ballerina.runtime.observability.tracer.BallerinaTracingObserver;
@@ -59,7 +59,7 @@ public class NativeFunctions {
 
         try {
             selectedProvider.init();
-            DefaultMetricRegistry.setInstance(new MetricRegistryImpl(selectedProvider));
+            DefaultMetricRegistry.setInstance(new MetricRegistry(selectedProvider));
             ObserveUtils.addObserver(new BallerinaMetricsObserver());
             return null;
         } catch (BError e) {

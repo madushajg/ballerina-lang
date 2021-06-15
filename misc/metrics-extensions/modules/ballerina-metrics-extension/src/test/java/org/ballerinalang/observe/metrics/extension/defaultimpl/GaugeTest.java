@@ -19,7 +19,6 @@ package org.ballerinalang.observe.metrics.extension.defaultimpl;
 
 import io.ballerina.runtime.observability.metrics.Gauge;
 import io.ballerina.runtime.observability.metrics.MetricRegistry;
-import io.ballerina.runtime.observability.metrics.MetricRegistryImpl;
 import io.ballerina.runtime.observability.metrics.PolledGauge;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -41,7 +40,7 @@ public class GaugeTest {
     @BeforeClass
     public void init() {
         DefaultMetricProvider metricProvider = new DefaultMetricProvider();
-        metricRegistry = new MetricRegistryImpl(metricProvider);
+        metricRegistry = new MetricRegistry(metricProvider);
     }
 
     @Test

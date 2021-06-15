@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -19,97 +19,131 @@ package io.ballerina.runtime.observability.metrics;
 
 import io.ballerina.runtime.observability.metrics.spi.MetricProvider;
 
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
-
+import java.util.stream.Collectors;
 
 /**
- * This represents the interface for metrics registry to be used with {@link DefaultMetricRegistry}.
+ * The implementation of {@link MetricRegistry} for keeping metrics by name.
  */
-public interface MetricRegistry {
+public class MetricRegistry {
 
-    /**
-     * Use {@link Counter#builder(String)}.
-     *
-     * @param id The {@link MetricId}.
-     * @return A existing or a new {@link Counter} metric.
-     */
-    Counter counter(MetricId id);
+    // Metric Provider implementation, which provides actual implementations
+    private final MetricProvider metricProvider;
+    // Metrics Map by ID
+    private final ConcurrentMap<MetricId, Metric> metrics;
 
-    /**
-     * Registers the counter metrics instance.
-     *
-     * @param counter The {@link Counter} instance.
-     * @return A existing or a newly registered {@link Counter} metric.
-     */
-    Counter register(Counter counter);
+    public MetricRegistry(MetricProvider metricProvider) {
+        this.metricProvider = metricProvider;
+        this.metrics = new ConcurrentHashMap<>();
+    }
 
-    /**
-     * Unregister the counter metrics instance.
-     *
-     * @param counter The {@link Counter} instance.
-     */
-    void unregister(Counter counter);
+    public Counter counter(MetricId id) {
+        return getOrCreate(id, Counter.class, () -> metricProvider.newCounter(id));
+    }
 
-    /**
-     * Use {@link Gauge#builder(String)}.
-     *
-     * @param id               The {@link MetricId}.
-     * @param statisticConfigs {@link StatisticConfig statistic configurations} to summarize gauge values.
-     * @return A existing or a new {@link Gauge} metric.
-     */
-    Gauge gauge(MetricId id, StatisticConfig... statisticConfigs);
+    public Counter register(Counter counter) {
+        return register(counter, Counter.class);
+    }
 
-    /**
-     * Registers the gauge metrics instance.
-     *
-     * @param gauge The {@link Gauge} instance.
-     * @return A existing or a newly registered {@link Gauge} metric.
-     */
-    Gauge register(Gauge gauge);
+    public void unregister(Counter counter) {
+        unregister(counter, Counter.class);
+    }
 
-    /**
-     * Unregister the gauge metrics instance.
-     *
-     * @param gauge The {@link Gauge} instance.
-     */
-    void unregister(Gauge gauge);
+    public Gauge gauge(MetricId id, StatisticConfig... statisticConfigs) {
+        return getOrCreate(id, Gauge.class, () -> metricProvider.newGauge(id, statisticConfigs));
+    }
 
-    /**
-     * Use {@link PolledGauge#builder(String, Object, ToDoubleFunction)}.
-     *
-     * @param id            The {@link MetricId}.
-     * @param obj           State object used to compute a value.
-     * @param valueFunction Function that produces an instantaneous gauge value from the state object.
-     * @param <T>           The type of the state object from which the gauge value is extracted.
-     * @return A existing or a new {@link PolledGauge} metric.
-     */
-    <T> PolledGauge polledGauge(MetricId id, T obj, ToDoubleFunction<T> valueFunction);
+    public Gauge register(Gauge gauge) {
+        return register(gauge, Gauge.class);
+    }
 
-    /**
-     * Registers the polled gauge metrics instance.
-     *
-     * @param gauge The {@link PolledGauge} instance.
-     * @return A existing or a newly registered {@link PolledGauge} metric.
-     */
-    PolledGauge register(PolledGauge gauge);
+    public void unregister(Gauge gauge) {
+        unregister(gauge, Gauge.class);
+    }
 
-    /**
-     * Unregisters the polled gauge metrics instance.
-     *
-     * @param gauge The {@link PolledGauge} instance.
-     */
-    void unregister(PolledGauge gauge);
+    public <T> PolledGauge polledGauge(MetricId id, T obj, ToDoubleFunction<T> valueFunction) {
+        return getOrCreate(id, PolledGauge.class, () -> metricProvider.newPolledGauge(id, obj, valueFunction));
+    }
 
-    /**
-     * Removes the metric with the given name.
-     *
-     * @param name the name of the metric
-     */
-    void remove(String name);
+    public PolledGauge register(PolledGauge gauge) {
+        return register(gauge, PolledGauge.class);
+    }
 
-    MetricProvider getMetricProvider();
+    public void unregister(PolledGauge gauge) {
+        unregister(gauge, PolledGauge.class);
+    }
 
-    Metric[] getAllMetrics();
+    private <M extends Metric> M getOrCreate(MetricId id, Class<M> metricClass, Supplier<M> metricSupplier) {
+        M metric = readMetric(id, metricClass);
+        if (metric == null) {
+            M newMetric = metricSupplier.get();
+            return writeMetricIfNotExists(newMetric, metricClass);
+        } else {
+            return metric;
+        }
+    }
 
-    Metric lookup(MetricId metricId);
+    private <M extends Metric> M readMetric(MetricId metricId, Class<M> metricClass) {
+        Metric existingMetrics = lookup(metricId);
+        if (existingMetrics != null) {
+            if (metricClass.isInstance(existingMetrics)) {
+                return (M) existingMetrics;
+            } else {
+                throw new IllegalArgumentException(metricId + " is already used for a different type " +
+                        "of metric: " + metricClass.getSimpleName());
+            }
+        }
+        return null;
+    }
+
+    private <M extends Metric> M writeMetricIfNotExists(M metric, Class<M> metricClass) {
+        final Metric existing = metrics.putIfAbsent(metric.getId(), metric);
+        if (existing != null) {
+            if (metricClass.isInstance(existing)) {
+                return (M) existing;
+            } else {
+                throw new IllegalArgumentException(metric.getId() + " is already used for a different type of metric: "
+                        + metricClass.getSimpleName());
+            }
+        }
+        return metric;
+    }
+
+    private <M extends Metric> M register(M registerMetric, Class<M> metricClass) {
+        M metric = readMetric(registerMetric.getId(), metricClass);
+        if (metric == null) {
+            return writeMetricIfNotExists(registerMetric, metricClass);
+        } else {
+            return metric;
+        }
+    }
+
+    private <M extends Metric> void unregister(Metric registerMetric, Class<M> metricClass) {
+        Metric metric = readMetric(registerMetric.getId(), metricClass);
+        if (metric != null) {
+            metrics.remove(registerMetric.getId());
+        }
+    }
+
+    public void remove(String name) {
+        List<MetricId> ids = metrics.keySet().stream()
+                .filter(id -> id.getName().equals(name)).collect(Collectors.toList());
+        ids.forEach(metrics::remove);
+    }
+
+    public MetricProvider getMetricProvider() {
+        return metricProvider;
+    }
+
+    public Metric[] getAllMetrics() {
+        return this.metrics.values().toArray(new Metric[this.metrics.values().size()]);
+    }
+
+    public Metric lookup(MetricId metricId) {
+        return metrics.get(metricId);
+    }
 }
